@@ -10,7 +10,7 @@ export class JwtInterceptor implements HttpInterceptor {
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         const currentUser = this.authService.currentUserValue;
         const isLoggedIn = currentUser && currentUser.token;
-        const isApiUrl = request.url.includes('/api/') || request.url.startsWith('http://localhost:8081/api');
+        const isApiUrl = request.url.includes('/api/') || request.url.startsWith('https://smart-civic-backend-10052026.onrender.com/api');
 
         if (isLoggedIn && isApiUrl) {
             console.log('[JWT_INTERCEPTOR] Attaching token to request:', request.url);

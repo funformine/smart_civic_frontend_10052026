@@ -237,7 +237,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   loadIssues() {
     this.isLoading = true;
-    this.http.get<any[]>('http://localhost:8081/api/subadmin/grouped-issues')
+    this.http.get<any[]>('https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues')
       .pipe(finalize(() => {
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -304,7 +304,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   loadEmployees() {
     console.log('[DEBUG] Loading Employees...');
-    this.http.get<User[]>('http://localhost:8081/api/subadmin/employees')
+    this.http.get<User[]>('https://smart-civic-backend-10052026.onrender.com/api/subadmin/employees')
       .subscribe({
         next: res => {
           console.log('[DEBUG] Employees loaded:', res.length);
@@ -330,11 +330,11 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
     this.empFeedback = { message: '', type: null };
 
     const saveObs = this.newEmp.id
-      ? this.http.put(`http://localhost:8081/api/subadmin/employees/${this.newEmp.id}`, this.newEmp)
+      ? this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/employees/${this.newEmp.id}`, this.newEmp)
       : (() => {
         const username = this.newEmp.name.toLowerCase().replace(/\s+/g, '.') + Math.floor(Math.random() * 100);
         const payload = { ...this.newEmp, username, password: 'password123' };
-        return this.http.post('http://localhost:8081/api/subadmin/employees', payload);
+        return this.http.post('https://smart-civic-backend-10052026.onrender.com/api/subadmin/employees', payload);
       })();
 
     saveObs.subscribe({
@@ -363,7 +363,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   deleteEmployee(id: number) {
     if (confirm('Are you sure you want to delete this employee?')) {
-      this.http.delete(`http://localhost:8081/api/subadmin/employees/${id}`)
+      this.http.delete(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/employees/${id}`)
         .subscribe(() => {
           this.loadEmployees();
           this.empFeedback = { message: 'Employee deleted successfully.', type: 'success' };
@@ -419,7 +419,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
       memberIds: this.assignedTeam.map(u => u.id)
     };
 
-    this.http.post(`http://localhost:8081/api/subadmin/grouped-issues/assign`, payload)
+    this.http.post(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues/assign`, payload)
       .subscribe({
         next: (res) => {
           alert("Grouped assignment updated successfully!");
@@ -446,12 +446,12 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
   }
 
   updateStatus(id: number, status: string) {
-    this.http.put(`http://localhost:8081/api/complaints/${id}/status?status=${status}`, {})
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/complaints/${id}/status?status=${status}`, {})
       .subscribe({ next: () => this.loadIssues(), error: err => alert(err.error?.message || 'Update failed') });
   }
 
   acceptGroup(g: GroupedIssue) {
-    this.http.put(`http://localhost:8081/api/subadmin/grouped-issues/status`, {
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues/status`, {
       ids: g.complaintIds,
       status: 'Accepted'
     }).subscribe({
@@ -467,7 +467,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   confirmReject() {
     if (!this.rejectingGroup || !this.rejectReason.trim()) return;
-    this.http.put(`http://localhost:8081/api/subadmin/grouped-issues/status`, {
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues/status`, {
       ids: this.rejectingGroup.complaintIds,
       status: 'Rejected',
       resolutionNotes: this.rejectReason
@@ -484,7 +484,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   confirmResolve() {
     if (!this.resolvingGroup) return;
-    this.http.put(`http://localhost:8081/api/subadmin/grouped-issues/status`, {
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues/status`, {
       ids: this.resolvingGroup.complaintIds,
       status: 'Resolved',
       resolutionNotes: this.resolutionNotes
@@ -503,7 +503,7 @@ export class SubAdminDashboardComponent implements OnInit, AfterViewInit, OnDest
 
   confirmCompletion() {
     if (!this.resolvingGroup) return;
-    this.http.put(`http://localhost:8081/api/subadmin/grouped-issues/status`, {
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/subadmin/grouped-issues/status`, {
       ids: this.resolvingGroup.complaintIds,
       status: 'Resolved',
       resolutionNotes: this.resolutionNotes,

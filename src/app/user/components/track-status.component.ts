@@ -33,7 +33,7 @@ export class TrackStatusComponent implements OnInit, AfterViewInit {
   initIcons() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
 
   fetchUserProfile() {
-    this.http.get<any>('http://localhost:8081/api/user/profile').subscribe({
+    this.http.get<any>('https://smart-civic-backend-10052026.onrender.com/api/user/profile').subscribe({
       next: (profile) => {
         this.userLocation = profile.location;
         this.currentUserId = profile.id;
@@ -51,7 +51,7 @@ export class TrackStatusComponent implements OnInit, AfterViewInit {
 
   fetchMyComplaints() {
     this.isLoading = true;
-    this.http.get<Complaint[]>('http://localhost:8081/api/complaints/my').pipe(
+    this.http.get<Complaint[]>('https://smart-civic-backend-10052026.onrender.com/api/complaints/my').pipe(
       timeout(10000),
       catchError(err => { console.error('[TRACK_DEBUG] My reports failed:', err); return of([]); })
     ).subscribe({
@@ -62,7 +62,7 @@ export class TrackStatusComponent implements OnInit, AfterViewInit {
 
   fetchAreaComplaints() {
     this.isLoading = true;
-    this.http.get<Complaint[]>(`http://localhost:8081/api/complaints/area?location=${encodeURIComponent(this.userLocation)}`).pipe(
+    this.http.get<Complaint[]>(`https://smart-civic-backend-10052026.onrender.com/api/complaints/area?location=${encodeURIComponent(this.userLocation)}`).pipe(
       timeout(10000),
       catchError(err => { console.error('[TRACK_DEBUG] Area reports failed:', err); return of([]); })
     ).subscribe({

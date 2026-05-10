@@ -45,7 +45,7 @@ export class UserDashboardComponent implements OnInit, AfterViewInit {
 
   fetchSummary() {
     const start = performance.now();
-    this.http.get<any>('http://localhost:8081/api/complaints/summary').subscribe({
+    this.http.get<any>('https://smart-civic-backend-10052026.onrender.com/api/complaints/summary').subscribe({
       next: (data) => {
         const duration = (performance.now() - start).toFixed(2);
         console.log(`[DASHBOARD_DEBUG] Stats summary received in ${duration}ms:`, data);
@@ -67,7 +67,7 @@ export class UserDashboardComponent implements OnInit, AfterViewInit {
     console.log(`[DASHBOARD_DEBUG] Loading batch for page ${page}...`);
 
     const start = performance.now();
-    this.http.get<any>(`http://localhost:8081/api/complaints/my/paginated?page=${page}&size=6`).pipe(
+    this.http.get<any>(`https://smart-civic-backend-10052026.onrender.com/api/complaints/my/paginated?page=${page}&size=6`).pipe(
       timeout(10000),
       catchError(err => {
         console.error('[DASHBOARD_DEBUG] Batch load failed:', err);
@@ -145,7 +145,7 @@ export class UserDashboardComponent implements OnInit, AfterViewInit {
       category: this.editingComplaint.category
     };
 
-    this.http.put(`http://localhost:8081/api/complaints/${this.editingComplaint.id}`, payload).subscribe({
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/complaints/${this.editingComplaint.id}`, payload).subscribe({
       next: (res: any) => {
         // Update local state
         const idx = this.complaints.findIndex(c => c.id === this.editingComplaint!.id);
@@ -169,7 +169,7 @@ export class UserDashboardComponent implements OnInit, AfterViewInit {
   deleteReport(id: number) {
     if (!confirm('Are you sure you want to delete this pending report? This cannot be undone.')) return;
 
-    this.http.delete(`http://localhost:8081/api/complaints/${id}`).subscribe({
+    this.http.delete(`https://smart-civic-backend-10052026.onrender.com/api/complaints/${id}`).subscribe({
       next: () => {
         this.complaints = this.complaints.filter(c => c.id !== id);
         this.fetchSummary(); // Refresh stats

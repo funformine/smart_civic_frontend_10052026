@@ -54,7 +54,7 @@ export class RaiseComplaintComponent implements OnInit, AfterViewInit {
   }
 
   fetchUserProfile() {
-    this.http.get<any>('http://localhost:8081/api/user/profile').subscribe({
+    this.http.get<any>('https://smart-civic-backend-10052026.onrender.com/api/user/profile').subscribe({
       next: (profile) => {
         if (profile.location) {
           console.log('[COMPLAINT_DEBUG] Setting auto-area from profile:', profile.location);
@@ -92,7 +92,7 @@ export class RaiseComplaintComponent implements OnInit, AfterViewInit {
     this.complaintForm.patchValue({ category: cat, subCategory: '', customIssue: '' });
 
     // Fetch dynamic issue types from backend
-    this.http.get<string[]>(`http://localhost:8081/api/issue-types/${cat}`).subscribe({
+    this.http.get<string[]>(`https://smart-civic-backend-10052026.onrender.com/api/issue-types/${cat}`).subscribe({
       next: (types) => {
         this.subCategories = [...types, 'Others'];
         console.log('[COMPLAINT_DEBUG] Sub-categories fetched:', this.subCategories);
@@ -147,7 +147,7 @@ export class RaiseComplaintComponent implements OnInit, AfterViewInit {
       status: 'Pending'
     };
 
-    this.http.post('http://localhost:8081/api/complaints/raise', payload)
+    this.http.post('https://smart-civic-backend-10052026.onrender.com/api/complaints/raise', payload)
       .subscribe({
         next: () => {
           this.isSubmitting = false;

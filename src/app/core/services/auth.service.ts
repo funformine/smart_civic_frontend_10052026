@@ -4,7 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { User } from '../models/models';
 
-const AUTH_API = 'http://localhost:8081/api/auth/';
+const AUTH_API = 'https://smart-civic-backend-10052026.onrender.com/api/auth/';
 
 @Injectable({
     providedIn: 'root'
@@ -12,7 +12,7 @@ const AUTH_API = 'http://localhost:8081/api/auth/';
 export class AuthService {
     private currentUserSubject: BehaviorSubject<User | null>;
     public currentUser: Observable<User | null>;
-    public apiUrl = 'http://localhost:8081/api';
+    public apiUrl = 'https://smart-civic-backend-10052026.onrender.com/api';
 
     constructor(private http: HttpClient) {
         const storedUser = localStorage.getItem('currentUser');

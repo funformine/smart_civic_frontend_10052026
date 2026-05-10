@@ -182,7 +182,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     console.log('[ADMIN_DEBUG] Initiating system sync. Silent mode:', this.complaints.length > 0);
 
-    this.http.get<Complaint[]>('http://localhost:8081/api/complaints/all').pipe(
+    this.http.get<Complaint[]>('https://smart-civic-backend-10052026.onrender.com/api/complaints/all').pipe(
       timeout(8000),
       catchError(err => {
         console.error('[ADMIN_DEBUG] HTTP Error:', err);
@@ -203,7 +203,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   loadSubAdmins() {
-    this.http.get<any[]>('http://localhost:8081/api/admin/subadmins').subscribe(res => {
+    this.http.get<any[]>('https://smart-civic-backend-10052026.onrender.com/api/admin/subadmins').subscribe(res => {
       this.subAdmins = res.map(u => ({
         ...u,
         roles: u.roles.map((r: any) => typeof r === 'string' ? r : r.name)
@@ -212,7 +212,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   loadAllUsers() {
-    this.http.get<any[]>('http://localhost:8081/api/admin/users').subscribe(res => {
+    this.http.get<any[]>('https://smart-civic-backend-10052026.onrender.com/api/admin/users').subscribe(res => {
       // Flatten roles to strings to match frontend model
       this.allUsers = res.map(u => ({
         ...u,
@@ -241,7 +241,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   deleteUser(id: number) {
     if (confirm('Are you sure you want to permanently delete this user?')) {
-      this.http.delete(`http://localhost:8081/api/admin/users/${id}`).subscribe({
+      this.http.delete(`https://smart-civic-backend-10052026.onrender.com/api/admin/users/${id}`).subscribe({
 next: () => {
   this.loadAllUsers();
   this.loadSubAdmins();
@@ -304,7 +304,7 @@ saveOversight() {
       slaDate: this.oversightUpdate.slaDate
     };
 
-    this.http.put(`http://localhost:8081/api/admin/complaints/${this.editingComplaint.id}/priority`, payload)
+    this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/admin/complaints/${this.editingComplaint.id}/priority`, payload)
       .subscribe({
         next: () => {
           this.editingComplaint = null;
@@ -331,7 +331,7 @@ getNotSetCount(): number {
 reject(id: number) {
   const reason = prompt('Administrative Rejection Reason:');
   if (reason) {
-    this.http.post(`http://localhost:8081/api/complaints/${id}/reject?reason=${reason}`, {})
+    this.http.post(`https://smart-civic-backend-10052026.onrender.com/api/complaints/${id}/reject?reason=${reason}`, {})
       .subscribe(() => this.loadComplaints());
   }
 }
@@ -377,7 +377,7 @@ onCreateUser(event: Event) {
     roles: ['SUB_ADMIN'] // Automated for Administrative Provisioning
   };
 
-  this.http.post('http://localhost:8081/api/admin/users/create', payload)
+  this.http.post('https://smart-civic-backend-10052026.onrender.com/api/admin/users/create', payload)
     .pipe(finalize(() => this.isProvisioning = false))
     .subscribe({
       next: () => {
@@ -419,7 +419,7 @@ selectDepartment(dept: string) {
 }
 saveUser() {
   if (!this.editingId) return;
-  this.http.put(`http://localhost:8081/api/admin/users/${this.editingId}`, this.editingUser)
+  this.http.put(`https://smart-civic-backend-10052026.onrender.com/api/admin/users/${this.editingId}`, this.editingUser)
     .subscribe({
       next: () => {
         // Success State

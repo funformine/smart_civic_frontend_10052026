@@ -86,8 +86,8 @@ export class ProfileComponent implements OnInit {
   }
 
   fetchProfile() {
-    console.log('[PROFILE_DEBUG] Fetching profile from: http://localhost:8081/api/user/profile');
-    this.http.get('http://localhost:8081/api/user/profile').subscribe({
+    console.log('[PROFILE_DEBUG] Fetching profile from: https://smart-civic-backend-10052026.onrender.com/api/user/profile');
+    this.http.get('https://smart-civic-backend-10052026.onrender.com/api/user/profile').subscribe({
       next: (data: any) => {
         console.log('[PROFILE_DEBUG] Profile data successfully fetched:', data);
         this.profileData = data;
@@ -108,7 +108,7 @@ export class ProfileComponent implements OnInit {
 
   onUpdateProfile() {
     this.isUpdatingProfile = true;
-    this.http.put('http://localhost:8081/api/user/profile', this.profileForm.value)
+    this.http.put('https://smart-civic-backend-10052026.onrender.com/api/user/profile', this.profileForm.value)
       .pipe(finalize(() => this.isUpdatingProfile = false))
       .subscribe({
         next: (res: any) => {
@@ -155,7 +155,7 @@ export class ProfileComponent implements OnInit {
       newPassword: this.passwordForm.value.newPassword
     };
 
-    this.http.put('http://localhost:8081/api/user/password', payload)
+    this.http.put('https://smart-civic-backend-10052026.onrender.com/api/user/password', payload)
       .pipe(finalize(() => this.isChangingPassword = false))
       .subscribe({
         next: () => {
