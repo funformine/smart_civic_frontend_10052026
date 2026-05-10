@@ -1,0 +1,599 @@
+    <div class="dept-dashboard-wrapper">
+
+      <!-- ISSUE REPORTS TAB -->
+      <div class="tab-content fade-in" *ngIf="activeTab === 'Issues'">
+        <div class="tab-header mb-4">
+          <h2 class="text-neon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            {{ department }} Department — Issue Reports
+          </h2>
+          <p class="text-grey small">All citizen complaints submitted under the {{ department }} department.</p>
+        </div>
+
+        <!-- STATS BOXES -->
+        <div class="stats-row mb-4">
+          <div class="stat-card">
+            <div class="stat-icon total"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="stat-info">
+              <div class="stat-value">{{ groupedIssues.length }}</div>
+              <div class="stat-label">Total Requests</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon accepted"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stat-info">
+              <div class="stat-value accepted-val">{{ acceptedCount }}</div>
+              <div class="stat-label">Accepted</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon rejected"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            <div class="stat-info">
+              <div class="stat-value rejected-val">{{ rejectedCount }}</div>
+              <div class="stat-label">Rejected</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon pending"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-info">
+              <div class="stat-value pending-val">{{ pendingCount }}</div>
+              <div class="stat-label">Pending</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar mb-3">
+          <div class="filter-label">Filter by Status:</div>
+          <div class="custom-dropdown filter-dropdown" [class.active]="showFilterDropdown">
+            <div class="dropdown-trigger filter-trigger" (click)="showFilterDropdown = !showFilterDropdown">
+              <span class="filter-trigger-text">
+                <span class="filter-dot" [class]="'dot-' + statusFilter.toLowerCase().replace(' ', '-')"></span>
+                {{ statusFilter === 'All' ? 'All Statuses' : statusFilter }}
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="dropdown-options" *ngIf="showFilterDropdown">
+              <div class="option" [class.active-option]="statusFilter === 'All'" (click)="setStatusFilter('All')">All Statuses</div>
+              <div class="option" [class.active-option]="statusFilter === 'Pending'" (click)="setStatusFilter('Pending')">Pending</div>
+              <div class="option" [class.active-option]="statusFilter === 'Accepted'" (click)="setStatusFilter('Accepted')">Accepted</div>
+              <div class="option" [class.active-option]="statusFilter === 'Rejected'" (click)="setStatusFilter('Rejected')">Rejected</div>
+              <div class="option" [class.active-option]="statusFilter === 'In Progress'" (click)="setStatusFilter('In Progress')">In Progress</div>
+              <div class="option" [class.active-option]="statusFilter === 'Resolved'" (click)="setStatusFilter('Resolved')">Resolved</div>
+            </div>
+          </div>
+          <span class="filter-count">{{ filteredGroupedIssues.length }} issue{{ filteredGroupedIssues.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div class="card glass-card shadow-lg p-0">
+          <div *ngIf="isLoading" class="loader-container text-center p-5">
+            <div class="spinner"></div>
+            <p class="text-grey mt-2">Loading reports...</p>
+          </div>
+
+          <div class="table-scroll" *ngIf="hasLoaded && !isLoading && filteredGroupedIssues.length > 0">
+          <table class="dept-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Issue Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Reporters</th>
+                <!-- Dynamic Columns -->
+                <ng-container *ngIf="anyHasAssignments">
+                  <th>Priority</th>
+                  <th>Deadline (SLA)</th>
+                </ng-container>
+                <th *ngIf="!anyHasAssignments">Assigned</th>
+                <th>Actions</th>
+                <th *ngIf="anyHasPriority">Completion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of filteredGroupedIssues" class="hover-fade">
+                <td><span class="id-badge">#{{ g.representative.id }}</span></td>
+                <td><span class="issue-type-badge">{{ getIssueLabel(g.representative.description) }}</span></td>
+                <td class="text-grey small">{{ g.representative.location }}</td>
+                <td><span class="status-badge" [class]="getStatusClass(g.status)">{{ g.status }}</span></td>
+                <td>
+                  <div class="reporters-cell">
+                    <span class="reporter-count-badge" [class.high-impact]="g.reportersCount > 1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      {{ g.reportersCount }} {{ g.reportersCount === 1 ? 'Reporter' : 'Reporters' }}
+                    </span>
+                  </div>
+                </td>
+                
+                <!-- Dynamic Assignment Info -->
+                <ng-container *ngIf="hasAssignments(g)">
+                  <td>
+                    <span class="priority-badge mini" [class.not-set]="!g.representative.priorityLevel || g.representative.priorityLevel === 'Not Set'"
+                          [class.primary]="g.representative.priorityLevel === 'Primary'" 
+                          [class.secondary]="g.representative.priorityLevel === 'Secondary'">
+                      {{ g.representative.priorityLevel || 'Not Set' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="info-stack">
+                      <span class="text-white small">{{ g.representative.slaTimeline ? (g.representative.slaTimeline | date:'dd MMM, HH:mm') : 'Estimated Deadline Date' }}</span>
+                      <span class="text-grey tiny">Target Completion</span>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <td *ngIf="!hasAssignments(g)">
+                  <span class="assign-chip" [class.assigned]="g.representative.assignedEmployees && g.representative.assignedEmployees.length > 0">
+                    <svg *ngIf="g.representative.assignedEmployees && g.representative.assignedEmployees.length > 0" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {{ (g.representative.assignedEmployees && g.representative.assignedEmployees.length > 0) ? 'Assigned' : 'Unassigned' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-btns">
+                    <button class="dept-btn accept" *ngIf="g.status === 'Pending'" (click)="acceptGroup(g)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Accept
+                    </button>
+                    <button class="dept-btn reject" *ngIf="g.status === 'Pending' || g.status === 'Accepted'" (click)="openReject(g)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      Reject
+                    </button>
+                    <button class="dept-btn assign" *ngIf="g.status === 'Accepted' && (!g.representative.assignedEmployees || g.representative.assignedEmployees.length === 0)" (click)="goToAssign(g.representative)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                      Assign
+                    </button>
+                    <button class="dept-btn resolve" *ngIf="g.status === 'In Progress' && !hasPriority(g)" (click)="openResolve(g)">
+                      Waiting for prioritize
+                    </button>
+                  </div>
+                </td>
+                <td *ngIf="hasPriority(g) && g.status !== 'Resolved'">
+                   <button class="dept-btn resolve-premium" (click)="openCompletion(g)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Mark as Completed
+                   </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+
+          <div *ngIf="hasLoaded && !isLoading && filteredGroupedIssues.length === 0" class="empty-dept-state">
+            <div class="empty-dept-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <p class="empty-dept-title">No Issues Found</p>
+            <p class="empty-dept-sub">{{ statusFilter === 'All' ? 'No citizen complaints for the ' + department + ' department yet.' : 'No ' + statusFilter + ' issues found.' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REJECT MODAL -->
+      <div class="modal-overlay" *ngIf="rejectingGroup" (click)="rejectingGroup = null">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+          <h3 class="text-neon mb-3">Reject Grouped Issue</h3>
+          <p class="text-grey small mb-3">{{ rejectingGroup.description | slice:0:80 }}...</p>
+          <div class="form-group mb-3">
+            <label class="text-grey small">Reason for Rejection (Applied to all {{ rejectingGroup.reportersCount }} reports)</label>
+            <textarea class="dept-input" rows="3" [(ngModel)]="rejectReason" placeholder="Enter rejection reason..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="dept-btn-secondary" (click)="rejectingGroup = null">Cancel</button>
+            <button class="dept-btn reject" (click)="confirmReject()" [disabled]="!rejectReason.trim()">
+              Confirm Rejection
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESOLVE/COMPLETION MODAL -->
+      <div class="modal-overlay" *ngIf="showCompletionModal && resolvingGroup" (click)="showCompletionModal = false; resolvingGroup = null">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+          <h3 class="text-neon mb-3">Mark Grouped Issue as Completed</h3>
+          <p class="text-grey small mb-3">{{ resolvingGroup.description | slice:0:80 }}...</p>
+          
+          <div class="form-group mb-3">
+            <label class="text-grey small">Resolution Notes</label>
+            <textarea class="dept-input" rows="3" [(ngModel)]="resolutionNotes" placeholder="Describe the resolution..."></textarea>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="text-grey small">Completion Proof (Image URL/Note)</label>
+            <input type="text" class="dept-input" [(ngModel)]="completionProof" placeholder="https://example.com/proof.jpg">
+          </div>
+
+          <div class="modal-actions">
+            <button class="dept-btn-secondary" (click)="showCompletionModal = false; resolvingGroup = null">Cancel</button>
+            <button class="dept-btn resolve-premium" (click)="confirmCompletion()" [disabled]="!resolutionNotes.trim() || !completionProof.trim()">
+              Confirm Completion
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- EMPLOYEE MANAGEMENT TAB -->
+      <div class="tab-content fade-in" *ngIf="activeTab === 'Employees'" style="margin-top:70px;">
+        <div class="tab-header mb-4">
+          <div class="flex-between align-center">
+            <div>
+              <h2 class="text-neon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                {{ department }} — Employee Directory
+              </h2>
+              <p class="text-grey small">Manage field staff and track their current assignment status.</p>
+            </div>
+            <button class="dept-btn" (click)="showAddEmployeeForm = !showAddEmployeeForm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Employee
+            </button>
+          </div>
+        </div>
+
+        <!-- EMPLOYEE STATS -->
+        <div class="stats-row mb-4">
+          <div class="stat-card glass-card">
+            <div class="stat-info">
+              <div class="stat-value">{{ employees.length }}</div>
+              <div class="stat-label">Total Staff</div>
+            </div>
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-info">
+              <div class="stat-value text-neon">{{ availableEmployeesCount }}</div>
+              <div class="stat-label">Available</div>
+            </div>
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-info">
+              <div class="stat-value" style="color: #00bfff;">{{ assignedEmployeesCount }}</div>
+              <div class="stat-label">Assigned</div>
+            </div>
+          </div>
+          <div class="stat-card glass-card">
+            <div class="stat-info">
+              <div class="stat-value text-red">{{ notAvailableEmployeesCount }}</div>
+              <div class="stat-label">Not Available</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD EMPLOYEE FORM -->
+        <div class="card glass-card mb-4 p-4 fade-in add-emp-form" *ngIf="showAddEmployeeForm">
+          <h3 class="text-white mb-3">Add New Employee</h3>
+          <div class="provision-grid">
+            <div class="form-group">
+              <label class="text-white small mb-1 d-block required-label">Full Name</label>
+              <input type="text" class="dept-input" [(ngModel)]="newEmp.name" placeholder="e.g. Rahul Kumar" [disabled]="isSavingEmployee">
+            </div>
+            <div class="form-group">
+              <label class="text-white small mb-1 d-block required-label">Phone / Contact</label>
+              <input type="text" class="dept-input" [(ngModel)]="newEmp.contact" placeholder="e.g. 9876543210" [disabled]="isSavingEmployee">
+            </div>
+            <div class="form-group">
+              <label class="text-white small mb-1 d-block required-label">Work Area</label>
+              <input type="text" class="dept-input" [(ngModel)]="newEmp.area" placeholder="e.g. Anna Nagar" [disabled]="isSavingEmployee">
+            </div>
+            <div class="form-group">
+              <label class="text-white small mb-1 d-block required-label">Availability Status</label>
+              <select class="dept-input" [(ngModel)]="newEmp.status" [disabled]="isSavingEmployee">
+                <option value="Not Assigned">Available (Not Assigned)</option>
+                <option value="Assigned">Assigned</option>
+                <option value="Not Available">Not Available</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- FEEDBACK MESSAGE -->
+          <div *ngIf="empFeedback.message" class="mt-3 p-2 rounded text-center small fade-in" 
+               [style.background]="empFeedback.type === 'success' ? 'rgba(0,255,136,0.1)' : 'rgba(255,77,77,0.1)'"
+               [class.text-neon]="empFeedback.type === 'success'"
+               [class.text-danger]="empFeedback.type !== 'success'"
+               [style.border]="empFeedback.type === 'success' ? '1px solid rgba(0,255,136,0.2)' : '1px solid rgba(255,77,77,0.2)'">
+            {{ empFeedback.message }}
+          </div>
+
+          <div class="flex-end gap-3 mt-4">
+            <button class="dept-btn-secondary" (click)="showAddEmployeeForm = false; resetEmpForm()" [disabled]="isSavingEmployee">Cancel</button>
+            <button class="dept-btn" (click)="saveEmployee()" [disabled]="isSavingEmployee || !newEmp.name || !newEmp.contact || !newEmp.area">
+              <span *ngIf="!isSavingEmployee">{{ newEmp.id ? 'Update Employee' : 'Add Employee' }}</span>
+              <span *ngIf="isSavingEmployee" class="flex align-center gap-2">
+                <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Saving...
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- EMPLOYEE TABLE -->
+        <div class="card glass-card shadow-lg p-0">
+          <table class="dept-table" *ngIf="employees.length > 0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Staff Details</th>
+                <th>Phone</th>
+                <th>Work Area</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of employees" class="hover-fade">
+                <td><span class="id-badge">USR-{{ e.id }}</span></td>
+                <td>
+                  <div class="emp-cell">
+                    <div class="emp-avatar">{{ (e.name || e.username || '?')[0].toUpperCase() }}</div>
+                    <div>
+                      <div class="text-white font-bold small">{{ e.name || e.username }}</div>
+                      <div class="text-grey tiny">{{ e.email || e.username + '@smartcivic.com' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-grey small">{{ e.contact || 'N/A' }}</td>
+                <td class="text-grey small">{{ e.area || '—' }}</td>
+                <td>
+                  <span class="status-badge" [class]="(e.status || 'Not Assigned').toLowerCase().replace(' ', '-')">
+                    {{ e.status || 'Not Assigned' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <button class="action-btn edit" title="Edit" (click)="editEmployee(e)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="action-btn reject" title="Delete" (click)="deleteEmployee(e.id)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngIf="employees.length === 0" class="empty-dept-state">
+            <div class="empty-dept-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <p class="empty-dept-title">No Employees Found</p>
+            <p class="empty-dept-sub">No staff registered under {{ department }} department.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPLOYEE ASSIGNMENT TAB -->
+      <div class="tab-content fade-in" *ngIf="activeTab === 'Assignment'">
+        <div class="tab-header mb-4">
+          <h2 class="text-neon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+            {{ department }} Department — Employee Assignment
+          </h2>
+          <p class="text-grey small">Assign accepted complaints to department employees. Re-assign anytime using the table below.</p>
+        </div>
+
+        <div class="assignment-grid">
+          <!-- Section 1: Accepted Issues -->
+          <div class="card glass-card shadow-lg p-0 assign-step-card" [class.active-step]="!selectedIssue">
+            <div class="card-inner-header bg-step">
+              <div class="step-badge">STEP 1</div>
+              <div>
+                <span class="text-white font-bold small d-block">Select Accepted Issue</span>
+                <span class="text-grey tiny">Choose an issue from the list to begin the deployment.</span>
+              </div>
+              <span class="count-badge ml-auto">{{ pendingIssues.length }}</span>
+            </div>
+            <div class="assign-list">
+              <div *ngFor="let g of pendingIssues" class="assign-item" [class.selected]="selectedIssue?.id === g.representative.id" (click)="selectedIssue = g.representative; isReassigning = false; assignedTeam = []; assignedHead = null">
+                <div class="assign-id">#{{ g.representative.id }}</div>
+                <div class="assign-desc">
+                   <div class="font-bold">{{ getIssueLabel(g.description) }}</div>
+                   <div class="tiny text-grey">{{ g.reportersCount }} reporters</div>
+                </div>
+                <div class="assign-loc text-grey tiny">{{ g.location }}</div>
+              </div>
+              <div *ngIf="pendingIssues.length === 0" class="empty-dept-state" style="padding: 40px 20px;">
+                <p class="text-grey small">No accepted issue groups ready to assign.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Team Assignment Panel -->
+          <div class="card glass-card shadow-lg p-0 assign-step-card" [class.active-step]="selectedIssue" [class.reassign-mode]="isReassigning">
+            <div class="card-inner-header bg-step">
+              <div class="step-badge" [style.background]="isReassigning ? '#a78bfa' : ''" [style.color]="isReassigning ? 'white' : ''">{{ isReassigning ? 'RE-ASSIGN' : 'STEP 2' }}</div>
+              <div>
+                <span class="text-white font-bold small d-block">{{ isReassigning ? 'Re-assign Team for Issue #' + selectedIssue?.id : 'Assign Team &amp; Timeline' }}</span>
+                <span class="text-grey tiny">Select up to 5 members, nominate a head, and set dates.</span>
+              </div>
+            </div>
+            
+            <div class="p-4">
+              <div *ngIf="!selectedIssue" class="flex-center flex-column h-100 p-5 text-center" style="min-height: 400px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color: rgba(255,255,255,0.1); margin-bottom: 20px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                <h4 class="text-grey">Select from Step 1 or click Edit Assignment in the table below.</h4>
+              </div>
+
+              <div *ngIf="selectedIssue">
+              <div class="flex-between align-center mb-4">
+                <h3 class="text-neon m-0">{{ isReassigning ? 'Re-Assignment' : 'Assignment' }} for #{{ selectedIssue.id }}</h3>
+                <span class="issue-type-badge">{{ getIssueLabel(selectedIssue.description) }}</span>
+              </div>
+
+              <div class="issue-preview mb-4">{{ selectedIssue.description }}</div>
+
+              <!-- TEAM SELECTION -->
+              <div class="form-group mb-4">
+                <label class="text-white small mb-2 d-block">{{ isReassigning ? 'Select New Employees (All shown for re-assignment)' : 'Select Employees (Max 5, nominate a Head)' }}</label>
+                <div class="team-selection-grid">
+                  <div *ngFor="let e of allEmployeesForReassign" class="team-member-card" 
+                       [class.member-selected]="assignedTeam.includes(e)"
+                       [class.is-head]="assignedHead?.id === e.id"
+                       (click)="toggleMember(e)">
+                    <div class="member-header">
+                      <div class="member-avatar">{{ (e.name || e.username).charAt(0) }}</div>
+                      <div class="status-indicator" [class]="(e.status || 'Not Assigned').toLowerCase().replace(' ', '-')"></div>
+                      <div class="member-chk">
+                        <svg *ngIf="assignedTeam.includes(e)" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                    <div class="member-name truncate">{{ e.name || e.username }}</div>
+                    <div class="member-contact tiny text-grey">
+                       <span class="status-txt" [class]="(e.status || 'Not Assigned').toLowerCase().replace(' ', '-')">
+                          {{ e.status || 'Not Assigned' }}
+                       </span>
+                    </div>
+                    
+                    <button class="head-assign-btn" *ngIf="assignedTeam.includes(e)" 
+                            (click)="$event.stopPropagation(); toggleHead(e)">
+                      {{ assignedHead?.id === e.id ? ' Team Leader' : 'Make Head' }}
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="allEmployeesForReassign.length === 0" class="text-grey small p-4 text-center border-dashed">
+                  <div class="mb-2">⚠️ No employees available to assign.</div>
+                  <div class="tiny">Add new employees in the Management tab.</div>
+                </div>
+              </div>
+
+              <!-- TIMELINE CALENDAR -->
+              <div class="form-group mb-4">
+                <label class="text-white small mb-2 d-block">Expected Time Period</label>
+                <div class="date-range-grid">
+                  <div class="date-input-group">
+                    <span class="tiny text-grey">Start Date</span>
+                    <input type="datetime-local" class="dept-input mt-1" [(ngModel)]="assignStartDate">
+                  </div>
+                  <div class="date-input-group">
+                    <span class="tiny text-grey">End Date (SLA)</span>
+                    <input type="datetime-local" class="dept-input mt-1" [(ngModel)]="assignEndDate">
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex-end gap-3 mt-4">
+                <button class="dept-btn-secondary" (click)="selectedIssue = null; isReassigning = false; assignedTeam = []; assignedHead = null">Cancel</button>
+                <button class="dept-btn-primary" [class.reassign-submit-btn]="isReassigning"
+                        (click)="submitAssignment()" 
+                        [disabled]="assignedTeam.length === 0 || !assignedHead || !assignStartDate || !assignEndDate">
+                  {{ isReassigning ? '🔄 Confirm Re-Assignment' : 'Confirm & Submit Assignment' }}
+                </button>
+              </div>
+            </div> <!-- closes *ngIf="selectedIssue" -->
+          </div> <!-- closes p-4 -->
+        </div> <!-- closes Step 2 card -->
+      </div> <!-- closes assignment-grid -->
+    </div> <!-- closes Assignment tab content -->
+
+      <!-- CURRENTLY ASSIGNED ISSUES TABLE -->
+      <div class="assigned-table-section" *ngIf="activeTab === 'Assignment'">
+        <div class="assigned-table-header">
+          <div>
+            <h3 class="text-white mb-1">Currently Assigned Issues</h3>
+            <p class="text-grey tiny">Issues already dispatched to field employees. Click <strong style="color:#a78bfa">Edit Assignment</strong> to re-assign employees.</p>
+          </div>
+          <span class="count-badge purple-badge" *ngIf="assignedIssues.length > 0">{{ assignedIssues.length }}</span>
+        </div>
+
+        <div class="card glass-card shadow-lg p-0" *ngIf="assignedIssues.length > 0">
+          <div class="table-scroll">
+          <table class="dept-table">
+            <thead>
+              <tr>
+                <th>Issue ID</th>
+                <th>Description</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Assigned Team</th>
+                <th>Team Head</th>
+                <th>Deadline (SLA)</th>
+                <th>Edit Assignment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of assignedIssues" class="hover-fade" [class.active-reassign-row]="selectedIssue?.id === g.representative.id && isReassigning">
+                <td><span class="id-badge">#{{ g.representative.id }}</span></td>
+                <td class="desc-cell">
+                   <div class="font-bold">{{ getIssueLabel(g.description) }}</div>
+                   <div class="tiny text-grey">{{ g.reportersCount }} reports</div>
+                </td>
+                <td class="text-grey small">{{ g.location }}</td>
+                <td><span class="status-badge" [class]="getStatusClass(g.status)">{{ g.status }}</span></td>
+                <td>
+                  <div class="team-chips">
+                    <span class="team-chip" *ngFor="let emp of (g.representative.assignedEmployees | slice:0:3)">
+                      {{ emp.name || emp.username }}
+                    </span>
+                    <span class="team-chip more" *ngIf="(g.representative.assignedEmployees?.length || 0) > 3">
+                      +{{ (g.representative.assignedEmployees?.length || 0) - 3 }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <span class="head-name-badge" *ngIf="g.representative.assignedHeadName">{{ g.representative.assignedHeadName }}</span>
+                </td>
+                <td>
+                  <div class="info-stack" *ngIf="g.representative.slaTimeline">
+                    <span class="text-white small">{{ g.representative.slaTimeline | date:'dd MMM, HH:mm' }}</span>
+                    <span class="text-grey tiny">Target</span>
+                  </div>
+                </td>
+                <td>
+                  <button class="dept-btn reassign-btn" [class.active-reassign-btn]="selectedIssue?.id === g.representative.id && isReassigning" (click)="openReassign(g.representative)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    {{ (selectedIssue?.id === g.representative.id && isReassigning) ? 'Editing...' : 'Edit Assignment' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <div class="card glass-card p-4 text-center" *ngIf="assignedIssues.length === 0 && hasLoaded && !isLoading">
+          <p class="text-grey small">No issues currently have employees assigned. Use the panel above to make your first assignment.</p>
+        </div>
+      </div>
+
+      <!-- GOVERNMENT SCHEMES TAB (replaces Resolution) -->
+      <div class="tab-content fade-in" *ngIf="activeTab === 'Resolution'">
+        <div class="tab-header mb-4">
+          <h2 class="text-neon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-icon"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            {{ department }} Department — Government Schemes & Initiatives
+          </h2>
+          <p class="text-grey small">Exclusive central government welfare programs and infrastructure initiatives for the {{ department }} sector.</p>
+        </div>
+
+        <div class="schemes-grid">
+          <div *ngFor="let s of getSchemesByDept()" class="scheme-card glass-card">
+            <div class="scheme-visual">
+               <div class="scheme-icon-box" [style.background]="s.color + '15'">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [innerHTML]="s.icon"></svg>
+               </div>
+               <div class="scheme-tag" [style.background]="s.color + '20'" [style.color]="s.color">Active Launch</div>
+            </div>
+            <div class="scheme-body">
+               <h3 class="text-white">{{ s.title }}</h3>
+               <p class="text-grey tiny">{{ s.desc }}</p>
+               <div class="scheme-benefits">
+                  <div class="benefit-chip" *ngFor="let b of s.benefits">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" [attr.stroke]="s.color" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                     {{ b }}
+                  </div>
+               </div>
+            </div>
+            <div class="scheme-footer">
+               <div class="budget-info">
+                  <span class="text-grey tiny uppercase tracking-wide">Allocated Budget</span>
+                  <div class="budget-val" [style.color]="s.color">{{ s.budget }}</div>
+               </div>
+               <button class="scheme-action-btn" [style.background]="s.color" [style.box-shadow]="'0 0 15px ' + s.color + '40'">Learn More</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>

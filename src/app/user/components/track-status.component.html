@@ -1,0 +1,141 @@
+    <div class="track-container fade-in-up">
+      <header class="section-header mb-3">
+        <div>
+          <h1 class="text-neon">Track Status</h1>
+          <p class="text-grey">Monitor every stage of your reported issues.</p>
+        </div>
+      </header>
+
+      <!-- Scope Toggle -->
+      <div class="scope-toggle mb-2">
+        <button class="scope-btn" [class.active]="activeScope === 'Personal'" (click)="setScope('Personal')">
+          <i data-lucide="user"></i> My Reports
+        </button>
+        <button class="scope-btn" [class.active]="activeScope === 'Local'" (click)="setScope('Local')">
+          <i data-lucide="globe"></i> Reports in My Area ({{ userLocation || 'Loading...' }})
+        </button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar mb-2">
+        <button class="filter-btn" [class.active]="activeFilter === 'All'" (click)="setFilter('All')">All</button>
+        <button class="filter-btn" [class.active]="activeFilter === 'Power'" (click)="setFilter('Power')">Power</button>
+        <button class="filter-btn" [class.active]="activeFilter === 'Water'" (click)="setFilter('Water')">Water</button>
+        <button class="filter-btn" [class.active]="activeFilter === 'Land'" (click)="setFilter('Land')">Land</button>
+        <div class="filter-spacer"></div>
+        <button class="btn-refresh-mini" (click)="refreshData()"><i data-lucide="refresh-cw"></i></button>
+      </div>
+
+      <!-- Horizontal Scroller Container -->
+      <div class="scroll-wrapper mb-4">
+        <button class="scroll-nav left" (click)="scroll('left')"><i data-lucide="chevron-left"></i></button>
+        <div class="horizontal-scroller" #scroller>
+          <!-- Skeletons -->
+          <div *ngIf="isLoading && complaints.length === 0" class="d-flex gap-3" style="width: 100%;">
+            <div class="status-card p-3 skeleton-host" *ngFor="let i of [1,2,3]" style="min-width: 280px; opacity: 0.6;">
+              <div class="skeleton-title skeleton mb-2"></div>
+              <div class="skeleton-text skeleton mb-2"></div>
+              <div class="skeleton-text skeleton w-75"></div>
+            </div>
+          </div>
+
+          <div *ngIf="!isLoading && filteredComplaints.length === 0" class="no-data text-grey w-100 text-center py-4">
+            No complaints found for this category.
+          </div>
+          <div class="status-card"
+               *ngFor="let c of filteredComplaints"
+               [class.active]="selectedComplaint?.id === c.id"
+               (click)="selectComplaint(c)">
+            <div class="card-date-row">
+              <span class="card-date">{{ (c?.raisedDate || c?.createdAt) | date:'mediumDate' }}</span>
+              <span class="user-badge" *ngIf="c.reporter?.id === currentUserId">YOU</span>
+            </div>
+            <h3 class="card-title">{{ c.description | slice:0:30 }}{{ c.description.length > 30 ? '...' : '' }}</h3>
+            <div class="card-meta">
+              <span class="meta-item"><i data-lucide="map-pin"></i> {{ c.location }}</span>
+              <span class="meta-item cat-tag">{{ c.category }}</span>
+            </div>
+          </div>
+        </div>
+        <button class="scroll-nav right" (click)="scroll('right')"><i data-lucide="chevron-right"></i></button>
+      </div>
+
+      <!-- Detailed Status View -->
+      <div class="details-view card premium-card fade-in" *ngIf="selectedComplaint">
+        <div class="details-header mb-3">
+          <div class="id-badge">#{{ selectedComplaint.id }}</div>
+          <div class="details-info">
+            <h2>{{ selectedComplaint.category }} Issue</h2>
+            <p class="text-grey">{{ selectedComplaint.location }}</p>
+          </div>
+          <div class="status-indicator" [class.rejected]="selectedComplaint.status === 'Rejected'">
+            {{ selectedComplaint.status }}
+          </div>
+        </div>
+
+        <!-- Status Stepper Timeline -->
+        <div class="stepper-timeline">
+            <!-- Non-Rejected Flow -->
+            <ng-container *ngIf="selectedComplaint.status !== 'Rejected'">
+                <div class="step" *ngFor="let step of standardSteps; let i = index"
+                     [class.completed]="isStepCompleted(i)"
+                     [class.active]="isStepActive(i)">
+                    <div class="circle">
+                        <svg *ngIf="isStepCompleted(i)" class="check-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span *ngIf="!isStepCompleted(i)">{{ i + 1 }}</span>
+                    </div>
+                    <div class="label">{{ step }}</div>
+                    <div class="line" *ngIf="i < standardSteps.length - 1"></div>
+                </div>
+            </ng-container>
+
+            <!-- Rejected Flow -->
+            <ng-container *ngIf="selectedComplaint.status === 'Rejected'">
+                <div class="step completed">
+                    <div class="circle">
+                      <svg class="check-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div class="label">Reported</div>
+                    <div class="line"></div>
+                </div>
+                <div class="step active rejected">
+                    <div class="circle"><i data-lucide="x"></i></div>
+                    <div class="label">Rejected</div>
+                </div>
+            </ng-container>
+        </div>
+
+        <div class="rejection-reason mt-3 animate-slide-up" *ngIf="selectedComplaint.status === 'Rejected' && selectedComplaint.rejectionReason">
+            <div class="reason-box">
+                <i data-lucide="alert-circle"></i>
+                <div class="reason-text">
+                    <strong>Rejection Reason:</strong>
+                    <p>{{ selectedComplaint.rejectionReason }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="resolution-notes mt-3 animate-slide-up" *ngIf="selectedComplaint.status === 'Resolved' && selectedComplaint.resolutionNotes">
+            <div class="reason-box success">
+                <i data-lucide="check-circle"></i>
+                <div class="reason-text">
+                    <strong>Resolution Notes:</strong>
+                    <p>{{ selectedComplaint.resolutionNotes }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="full-desc mt-3">
+          <label class="section-label">Full Description</label>
+          <p>{{ selectedComplaint.description }}</p>
+        </div>
+      </div>
+
+      <div class="empty-selection" *ngIf="!selectedComplaint && filteredComplaints.length > 0">
+        <div class="hint-box">
+          <i data-lucide="mouse-pointer-2" class="icon-float"></i>
+          <p>Select a complaint from the scroller above to view detailed status.</p>
+        </div>
+      </div>
+    </div>
+  `,

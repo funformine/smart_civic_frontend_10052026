@@ -1,0 +1,650 @@
+<div class="admin-dashboard-wrapper fade-in-up">
+    <!-- Content Loader -->
+    <div *ngIf="isLoading && complaints.length === 0" class="loader-container">
+        <span class="spinner large"></span>
+        <p class="text-grey mt-1">Accessing System Command Center...</p>
+        <p class="tiny text-grey">Synchronizing Core Oversight Data</p>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-content fade-in" *ngIf="activeTab === 'Overview' && !isLoading">
+        <div class="stats-grid mb-4">
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><i data-lucide="activity"></i></div>
+                <div class="stat-info">
+                    <span class="label">Total Count</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="value">{{ complaints.length }}</span>
+                        <button class="btn-icon mini" (click)="loadComplaints()" title="Sync System Data">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card glass-card success">
+                <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+                <div class="stat-info">
+                    <span class="label">Completed Requests</span>
+                    <span class="value">{{ getStatusCount('Resolved') }}</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card warning">
+                <div class="stat-icon"><i data-lucide="clock"></i></div>
+                <div class="stat-info">
+                    <span class="label">Total Pending Requests</span>
+                    <span class="value">{{ getStatusCount('Pending') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-card mb-5">
+            <div class="overview-table-header mb-4"
+                style="display:flex; justify-content:space-between; align-items:center; margin-block:10px;">
+                <h3 class="text-neon m-0 ">Global Issue Reports</h3>
+                <div class="filter-controls p-0"
+                    style="background:transparent; border:none; display:flex; gap:15px; align-items:center;">
+                    <div class="search-box" style="position:relative;">
+                        <i data-lucide="search"
+                            style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--smart-green-neon); opacity:0.6;"></i>
+                        <input type="text" [(ngModel)]="overviewAreaFilter" placeholder="Filter by Area..."
+                            class="inline-input" style="padding-left:35px; width:200px;">
+                    </div>
+                    <div class="filter-group">
+                        <button class="filter-btn mini" [class.active]="overviewDeptFilter === 'All'"
+                            (click)="overviewDeptFilter = 'All'">All</button>
+                        <button class="filter-btn mini" [class.active]="overviewDeptFilter === 'Land'"
+                            (click)="overviewDeptFilter = 'Land'">Land</button>
+                        <button class="filter-btn mini" [class.active]="overviewDeptFilter === 'Power'"
+                            (click)="overviewDeptFilter = 'Power'">Power</button>
+                        <button class="filter-btn mini" [class.active]="overviewDeptFilter === 'Water'"
+                            (click)="overviewDeptFilter = 'Water'">Water</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="oversight-table mini">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category</th>
+                            <th>Request Link</th>
+                            <th>Area / District</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let g of filteredOverviewIssues" class="hover-fade">
+                            <td class="id-cell">#{{ g.representative.id }}</td>
+                            <td>
+                                <span class="role-badge" style="font-size:0.65rem; padding:3px 8px;"
+                                    [class.citizen]="g.category === 'Water'"
+                                    [class.dept]="g.category === 'Land' || g.category === 'Power'">
+                                    {{ g.category }}
+                                </span>
+                            </td>
+                            <td class="desc-cell">
+                                <span class="text-white small">{{ g.description | slice:0:50 }}{{ g.description.length >
+                                    50 ? '...' : '' }}</span>
+                                <div class="reporter-count-badge mini">{{ g.reportersCount }} reports</div>
+                            </td>
+                            <td>
+                                <div class="info-stack">
+                                    <span class="text-white small">{{ g.location || 'N/A' }}</span>
+                                    <span class="text-grey tiny">{{ g.representative.district || 'Global' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge mini" [class]="g.status.toLowerCase().replace(' ', '-')">{{
+                                    g.status }}</span>
+                            </td>
+                            <td>
+                                <span class="priority-badge mini"
+                                    [class.not-set]="!g.priorityLevel || g.priorityLevel === 'Not Set'"
+                                    [class.primary]="g.priorityLevel === 'Primary'"
+                                    [class.secondary]="g.priorityLevel === 'Secondary'"
+                                    [class.ternary]="g.priorityLevel === 'Ternary'">
+                                    {{ g.priorityLevel || 'Not Set' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div *ngIf="filteredOverviewIssues.length === 0" class="empty-state p-4 text-center">
+                    <p class="text-grey italic">No matching issues found in the system.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-card recent-activity-full mt-4">
+            <div class="card-header-premium mb-4">
+                <h3 class="text-neon m-0"><i data-lucide="zap" class="header-icon"></i> System Activity Stream</h3>
+                <p class="text-grey tiny">Real-time telemetry of citizen reports and department assignments</p>
+            </div>
+
+            <div class="activity-feed">
+                <div class="activity-timeline-item" *ngFor="let c of recentActivities">
+                    <div class="activity-point" [class]="c.status.toLowerCase().replace(' ', '-')"></div>
+                    <div class="activity-card-mini glass-card">
+                        <div class="activity-top">
+                            <span class="activity-id">#{{ c.id }}</span>
+                            <span class="activity-status" [class]="c.status.toLowerCase().replace(' ', '-')">{{ c.status
+                                }}</span>
+                            <span class="activity-time text-grey">{{ c.raisedDate | date:'medium' }}</span>
+                        </div>
+                        <div class="activity-body">
+                            <p class="text-white">{{ c.category }} report in <strong class="text-neon">{{ c.location
+                                    }}</strong></p>
+                            <p class="text-grey tiny">{{ c.description | slice:0:100 }}{{ c.description.length > 100 ?
+                                '...' : '' }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div *ngIf="complaints.length === 0" class="empty-state p-5">
+                    <p class="text-grey italic">Waiting for incoming system signals...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY TABS (Land, Power, Water) - Professional Table Layout -->
+    <div class="tab-content fade-in" *ngIf="['Land', 'Power', 'Water'].includes(activeTab) && !isLoading">
+        <div class="category-header mb-4" style="margin-block:20px;">
+            <h2 class="text-white">{{ activeTab === 'Power' ? 'Power Insights' : activeTab + ' Oversight' }} Queue</h2>
+            <p class="text-grey">Manage and assign citizen requests within the {{ activeTab.toLowerCase() }} sector.</p>
+        </div>
+
+        <!-- NEW: Oversight Stats for Category -->
+        <div class="stats-grid mb-4">
+            <div class="stat-card glass-card">
+                <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg></div>
+                <div class="stat-info">
+                    <span class="label">Total Category Submissions</span>
+                    <span class="value">{{ filteredComplaints.length }}</span>
+                </div>
+            </div>
+            <div class="stat-card glass-card success">
+                <div class="stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg></div>
+                <div class="stat-info">
+                    <span class="label">SLA Assigned</span>
+                    <span class="value">{{ getSlaCount(true) }}</span>
+                </div>
+            </div>
+            <div class="card glass-card stat-card danger">
+                <div class="stat-icon"><i data-lucide="alert-circle"></i></div>
+                <div class="stat-info">
+                    <span class="label">Requires Triage</span>
+                    <span class="value">{{ getNotSetCount() }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Filters -->
+        <div class="filter-controls glass-card p-2 mb-4">
+            <div class="filter-group" style="margin-block:20px;">
+                <span class="text-grey small mr-3" style="display:flex; align-items:center; ">Filter Priority:</span>
+                <button class="filter-btn" [class.active]="priorityFilter === 'All'"
+                    (click)="setPriorityFilter('All')">All</button>
+                <button class="filter-btn" [class.active]="priorityFilter === 'Not Set'"
+                    (click)="setPriorityFilter('Not Set')">Not Set</button>
+                <button class="filter-btn" [class.active]="priorityFilter === 'Primary'"
+                    (click)="setPriorityFilter('Primary')">Primary</button>
+                <button class="filter-btn" [class.active]="priorityFilter === 'Secondary'"
+                    (click)="setPriorityFilter('Secondary')">Secondary</button>
+                <button class="filter-btn" [class.active]="priorityFilter === 'Ternary'"
+                    (click)="setPriorityFilter('Ternary')">Ternary</button>
+            </div>
+        </div>
+
+        <div class="table-responsive glass-card" *ngIf="filteredComplaints.length > 0">
+            <table class="oversight-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Priority</th>
+                        <th>Request Detail</th>
+                        <th>Status</th>
+                        <th>SLA Deadline</th>
+                        <th>Field Team Assgined</th>
+                        <th>Head / Contact</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let g of filteredComplaints" class="hover-fade">
+                        <td class="id-cell">#{{ g.representative.id }}</td>
+                        <td>
+                            <span class="priority-badge"
+                                [class.not-set]="g.priorityLevel === 'Not Set' || !g.priorityLevel"
+                                [class.primary]="g.priorityLevel === 'Primary'"
+                                [class.secondary]="g.priorityLevel === 'Secondary'"
+                                [class.ternary]="g.priorityLevel === 'Ternary'">
+                                {{ g.priorityLevel || 'Not Set' }}
+                            </span>
+                        </td>
+                        <td class="desc-cell">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <span class="main-text">{{ g.description | slice:0:60 }}{{ g.description.length > 60 ?
+                                    '...' : '' }}</span>
+                                <span class="reporter-count-badge mini">{{ g.reportersCount }} reports</span>
+                            </div>
+                            <span class="text-grey tiny">{{ g.location }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge" [class]="g.status.toLowerCase().replace(' ', '-')">
+                                {{ g.status === 'Accepted' ? 'Pending Review' : g.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="info-stack">
+                                <span class="text-white small" *ngIf="g.slaTimeline">{{ g.slaTimeline | date:'dd MMM,
+                                    HH:mm' }}</span>
+                                <span class="text-grey tiny" *ngIf="!g.slaTimeline">No SLA Assigned</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div *ngIf="g.assignedEmployees && g.assignedEmployees.length > 0">
+                                <div *ngFor="let e of g.assignedEmployees" class="text-white tiny"
+                                    style="margin-bottom:2px; padding-left:4px;">• {{ e.name }}</div>
+                            </div>
+                            <div *ngIf="(!g.assignedEmployees || g.assignedEmployees.length === 0)"
+                                class="text-grey tiny italic">Unassigned</div>
+                        </td>
+                        <td>
+                            <div *ngIf="g.assignedHeadName">
+                                <div class="text-white small" style="font-weight:700;"><i data-lucide="crown"
+                                        style="width:10px; height:10px; vertical-align:middle; color:#ffeb3b; margin-right:4px;"></i>
+                                    {{ g.assignedHeadName }}</div>
+                                <div class="text-neon tiny" style="margin-top:2px;"><i data-lucide="phone"
+                                        style="width:10px; height:10px; vertical-align:middle;"></i> {{
+                                    g.assignedHeadPhone }}</div>
+                            </div>
+                            <div *ngIf="!g.assignedHeadName" class="text-grey tiny italic">No Head</div>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="btn-icon edit" (click)="openEditModal(g.representative)"
+                                    title="Manage Oversight">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-icon danger" (click)="reject(g.representative.id)"
+                                    title="Decline Issue">
+                                    <i data-lucide="x-circle"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Restored Empty State -->
+        <div class="empty-state card glass-card" *ngIf="filteredComplaints.length === 0">
+            <svg style="width:4rem; height:4rem; opacity:0.2;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <p>No <strong>{{ activeTab }}</strong> issues found. Check if the sub-admin has accepted or assigned the
+                reports.</p>
+        </div>
+    </div>
+
+    <div class="tab-content fade-in" *ngIf="activeTab === 'Creation'">
+        <div class="provision-container max-900 m-auto">
+            <div class="card glass-card provision-card mb-5 shadow-xl border-neon-dim">
+                <div class="form-header text-center mb-5">
+                    <h2 class="text-neon mb-3" style="font-size: 1.8rem; letter-spacing: 1px;margin-bottom:1.5rem;">
+                        Create Department Login</h2>
+                </div>
+
+                <form (submit)="onCreateUser($event)" class="provision-form">
+                    <!-- Field Group 1: Identity -->
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="briefcase"></i> Choose Department</label>
+                            <div class="custom-dropdown" [class.active]="showProvisionDeptDropdown">
+                                <div class="dropdown-trigger"
+                                    (click)="showProvisionDeptDropdown = !showProvisionDeptDropdown">
+                                    <span>{{ newUser.department === 'Land' ? 'Land Oversight' : newUser.department ===
+                                        'Power' ? 'Power Oversight' : 'Water Oversight' }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </div>
+                                <div class="dropdown-options" *ngIf="showProvisionDeptDropdown">
+                                    <div class="option" (click)="selectProvisionDepartment('Land')"> Land </div>
+                                    <div class="option" (click)="selectProvisionDepartment('Power')">Power</div>
+                                    <div class="option" (click)="selectProvisionDepartment('Water')">Water</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="user"></i> Full Name</label>
+                            <input type="text" name="name" [(ngModel)]="newUser.name" placeholder="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="user-circle"></i> Username</label>
+                            <input type="text" name="username" [(ngModel)]="newUser.username" placeholder="jdoe_admin"
+                                required>
+                        </div>
+                    </div>
+
+                    <!-- Field Group 2: Contact & Access Scope -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="at-sign"></i> Email Address</label>
+                            <input type="email" name="email" [(ngModel)]="newUser.email"
+                                placeholder="official@smartcivic.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="phone"></i> Phone Number</label>
+                            <input type="tel" name="contact" [(ngModel)]="newUser.contact" placeholder="+91 XXXXX XXXXX"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="map"></i> District Oversight</label>
+                            <input type="text" name="district" [(ngModel)]="newUser.district"
+                                placeholder="e.g. North Zone" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="map-pin"></i> Specific Area</label>
+                            <input type="text" name="area" [(ngModel)]="newUser.area" placeholder="e.g. Sector 7"
+                                required>
+                        </div>
+                    </div>
+
+                    <!-- Field Group 3: Security -->
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="lock"></i> Security Password</label>
+                            <input type="password" name="password" [(ngModel)]="newUser.password" placeholder="••••••••"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label"><i data-lucide="shield-check"></i> Confirm Password</label>
+                            <input type="password" name="confirmPassword" [(ngModel)]="confirmPassword"
+                                placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="form-footer mt-2">
+                        <div class="validation-message danger mb-1 text-danger" *ngIf="formError">{{ formError }}</div>
+                        <div class="validation-message success mb-1" *ngIf="formSuccess">{{ formSuccess }}</div>
+
+                        <button type="submit" class="btn-primary w-50 m-auto d-block py-1" [disabled]="isProvisioning">
+                            <span *ngIf="isProvisioning" class="spinner btn-spinner"></span>
+                            <span>{{ isProvisioning ? 'Authenticating...' : 'Complete System Provisioning' }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Global User Management Table -->
+            <div class="user-management-hub fade-in">
+                <div class="hub-header mb-5 mt-5">
+                    <div class="header-info" style="display:flex; align-items:center; gap:12px;">
+                        <h2 class="text-white mb-3" style="font-size: 1.6rem; margin:0;"> Global Registry Management
+                        </h2>
+                        <button class="btn-icon refresh-btn" (click)="refreshUsers()" [class.spinning]="isRefreshing"
+                            title="Refresh Registry Data">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10" />
+                                <polyline points="1 20 1 14 7 14" />
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="filter-controls glass-card p-2">
+                        <div class="filter-group">
+                            <button class="filter-btn" [class.active]="userTableFilter === 'All'"
+                                (click)="userTableFilter = 'All'; applyUserTableFilter()">All Systems</button>
+                            <button class="filter-btn" [class.active]="userTableFilter === 'Citizen'"
+                                (click)="userTableFilter = 'Citizen'; applyUserTableFilter()">Public Citizens</button>
+                            <button class="filter-btn" [class.active]="userTableFilter === 'Land'"
+                                (click)="userTableFilter = 'Land'; applyUserTableFilter()">Land Dept</button>
+                            <button class="filter-btn" [class.active]="userTableFilter === 'Water'"
+                                (click)="userTableFilter = 'Water'; applyUserTableFilter()">Water Dept</button>
+                            <button class="filter-btn" [class.active]="userTableFilter === 'Power'"
+                                (click)="userTableFilter = 'Power'; applyUserTableFilter()">Power Dept</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive glass-card shadow-lg">
+                    <table class="registry-table">
+                        <thead>
+                            <tr>
+                                <th>System ID</th>
+                                <th>Official Identifier</th>
+                                <th>Contact & Location</th>
+                                <th>Department / Role</th>
+                                <th>Registry Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let u of filteredUsers" class="hover-fade"
+                                [class.editing-row]="editingId === u.id">
+                                <!-- 1. System ID -->
+                                <td><span class="id-cell">USR-{{ u.id }}</span></td>
+
+                                <!-- 2. Official Identifier (Name/Email) -->
+                                <td class="user-cell">
+                                    <ng-container *ngIf="editingId !== u.id; else editName">
+                                        <div class="user-avatar-mini" [class.admin-bg]="u.roles.includes('ROLE_ADMIN')">
+                                            <i
+                                                [attr.data-lucide]="u.roles.includes('ROLE_ADMIN') ? 'shield' : 'user'"></i>
+                                        </div>
+                                        <div class="user-meta">
+                                            <span class="name text-white font-bold">{{ u.name }}</span>
+                                            <span class="email text-grey tiny">{{ u.email }} | {{ u.username }}</span>
+                                        </div>
+                                    </ng-container>
+                                    <ng-template #editName>
+                                        <div class="edit-stack w-100">
+                                            <input class="inline-input mb-1" name="editName"
+                                                [(ngModel)]="editingUser.name" placeholder="Full Name">
+                                            <input class="inline-input" name="editEmail" [(ngModel)]="editingUser.email"
+                                                placeholder="Email Address">
+                                        </div>
+                                    </ng-template>
+                                </td>
+
+                                <!-- 3. Contact & Location -->
+                                <td>
+                                    <ng-container *ngIf="editingId !== u.id; else editContact">
+                                        <div class="info-stack">
+                                            <span class="text-white small"><i data-lucide="phone" class="row-icon"></i>
+                                                {{ u.contact || 'N/A' }}</span>
+                                            <span class="text-grey tiny"><i data-lucide="map-pin" class="row-icon"></i>
+                                                {{ u.area }} {{ u.area && u.district ? '|' : '' }} {{ u.district ||
+                                                'Global/Public' }}</span>
+                                        </div>
+                                    </ng-container>
+                                    <ng-template #editContact>
+                                        <div class="edit-stack w-100">
+                                            <input class="inline-input mb-1" name="editContact"
+                                                [(ngModel)]="editingUser.contact" placeholder="Phone">
+                                            <div class="d-flex gap-1">
+                                                <input class="inline-input" name="editDistrict"
+                                                    [(ngModel)]="editingUser.district" placeholder="District">
+                                                <input class="inline-input" name="editArea"
+                                                    [(ngModel)]="editingUser.area" placeholder="Area">
+                                            </div>
+                                        </div>
+                                    </ng-template>
+                                </td>
+
+                                <!-- 4. Department / Role -->
+                                <td>
+                                    <ng-container *ngIf="editingId !== u.id; else editDept">
+                                        <span class="role-badge"
+                                            [class.citizen]="u.roles.includes('ROLE_USER') && !u.roles.includes('ROLE_SUB_ADMIN')"
+                                            [class.dept]="u.roles.includes('ROLE_SUB_ADMIN')">
+                                            {{ u.department || (u.roles.includes('ROLE_ADMIN') ? 'System Admin' :
+                                            'Public Citizen') }}
+                                        </span>
+                                    </ng-container>
+                                    <ng-template #editDept>
+                                        <div class="custom-dropdown" [class.active]="showDeptDropdown">
+                                            <div class="dropdown-trigger inline-input"
+                                                (click)="showDeptDropdown = !showDeptDropdown">
+                                                <span>{{ editingUser.department || 'Select Department' }}</span>
+                                                <i data-lucide="chevron-down"></i>
+                                            </div>
+                                            <div class="dropdown-options" *ngIf="showDeptDropdown">
+                                                <div class="option" (click)="selectDepartment('Land')">Land Oversight
+                                                </div>
+                                                <div class="option" (click)="selectDepartment('Power')">Power Oversight
+                                                </div>
+                                                <div class="option" (click)="selectDepartment('Water')">Water Oversight
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </ng-template>
+                                </td>
+
+                                <!-- 5. Actions -->
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        <!-- VIEW MODE: Edit (SUB_ADMIN only) + Delete — hidden when this row is being edited -->
+                                        <ng-container *ngIf="editingId !== u.id">
+                                            <button class="btn-icon edit" *ngIf="u.roles.includes('ROLE_SUB_ADMIN')"
+                                                (click)="startEditing(u)" title="Edit Official Profile">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path
+                                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                </svg>
+                                            </button>
+                                            <button class="btn-icon danger" (click)="deleteUser(u.id)"
+                                                title="De-provision Account">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6" />
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                    <path d="M10 11v6" />
+                                                    <path d="M14 11v6" />
+                                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                                </svg>
+                                            </button>
+                                        </ng-container>
+
+                                        <!-- EDIT MODE: Save + Cancel — only shown for the row being edited -->
+                                        <ng-container *ngIf="editingId === u.id">
+                                            <button class="btn-icon save" (click)="saveUser()" title="Save Changes">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                            </button>
+                                            <button class="btn-icon cancel" (click)="cancelEditing()" title="Cancel">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </ng-container>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div *ngIf="filteredUsers.length === 0" class="empty-registry-state fade-in">
+                        <div class="empty-registry-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <line x1="17" y1="8" x2="23" y2="14" />
+                                <line x1="23" y1="8" x2="17" y2="14" />
+                            </svg>
+                        </div>
+                        <h4 class="empty-registry-title">No Records Found</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Oversight Control Center Modal (Redesigned) -->
+    <div class="feedback-overlay" *ngIf="editingComplaint" [class.show]="editingComplaint"
+        (click)="editingComplaint = null">
+        <div class="feedback-content card glass-card control-center-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header-premium mb-4">
+                <h2 class="text-neon">Oversight Command</h2>
+                <p class="text-grey tiny">Modifying parameters for Submission #{{ editingComplaint.id }}</p>
+            </div>
+
+            <!-- Priority Selection Grid -->
+            <div class="control-section mb-4">
+                <label class="control-label required-label"><i data-lucide="shield-alert"></i> Assigned Priority</label>
+                <div class="selection-grid-3">
+                    <div class="select-card" [class.active]="oversightUpdate.priority === 'Primary'"
+                        (click)="oversightUpdate.priority = 'Primary'">
+                        <i data-lucide="flame" class="card-icon primary"></i>
+                        <span>Primary</span>
+                    </div>
+                    <div class="select-card" [class.active]="oversightUpdate.priority === 'Secondary'"
+                        (click)="oversightUpdate.priority = 'Secondary'">
+                        <i data-lucide="alert-triangle" class="card-icon secondary"></i>
+                        <span>Secondary</span>
+                    </div>
+                    <div class="select-card" [class.active]="oversightUpdate.priority === 'Ternary'"
+                        (click)="oversightUpdate.priority = 'Ternary'">
+                        <i data-lucide="info" class="card-icon ternary"></i>
+                        <span>Ternary</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrated SLA Deadline -->
+            <div class="control-section mb-5">
+                <label class="control-label"><i data-lucide="calendar"></i> Service SLA Deadline (Optional)</label>
+                <input type="datetime-local" [(ngModel)]="oversightUpdate.slaDate"
+                    class="w-100 dept-select themed-datetime">
+            </div>
+
+            <div class="modal-actions-premium">
+                <button class="btn-primary-neon w-100 mb-3" (click)="saveOversight()">
+                    <span class="btn-content"> Submit</span>
+                </button>
+                <button class="btn-ghost-dim w-100" (click)="editingComplaint = null">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

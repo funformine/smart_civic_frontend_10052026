@@ -1,0 +1,161 @@
+<div class="page-content">
+  <!-- Success/Failure Overlay -->
+  <div class="feedback-overlay" *ngIf="submitStatus" [class.show]="showFeedback">
+    <div class="feedback-content card glass-card">
+      <div class="feedback-icon" [class.success]="submitStatus === 'success'" [class.error]="submitStatus === 'error'">
+        <i [attr.data-lucide]="submitStatus === 'success' ? 'check-circle' : 'alert-circle'"></i>
+      </div>
+      <h2 class="text-neon mb-3">{{ submitStatus === 'success' ? 'Profile Updated!' : 'Update Failed' }}</h2>
+      <p class="text-white mb-3 text-center">{{ feedbackMessage }}</p>
+
+      <div class="redirect-timer" *ngIf="submitStatus === 'success'">
+        <div class="timer-bar"></div>
+        <p class="small text-grey mt-1">Changes applied to your account.</p>
+      </div>
+
+      <button class="btn-primary w-100" *ngIf="submitStatus === 'error'"
+        (click)="submitStatus = null; showFeedback = false">Try Again</button>
+      <button class="btn-ghost w-100 mt-2" *ngIf="submitStatus === 'success'"
+        (click)="submitStatus = null; showFeedback = false">Close</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Notification Toast -->
+    <div class="notification-overlay" *ngIf="notification.show" [class.show]="notification.visible">
+      <div class="toast-card" [class]="notification.type">
+        <div class="toast-icon">
+          <i [attr.data-lucide]="notification.icon"></i>
+        </div>
+        <div class="toast-content">
+          <h4>{{ notification.title }}</h4>
+          <p>{{ notification.message }}</p>
+        </div>
+        <button class="toast-close" (click)="hideNotification()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-header mb-4 fade-in-up">
+      <div class="profile-avatar-wrapper">
+        <div class="avatar-large">
+          <i data-lucide="user" class="avatar-placeholder"></i>
+        </div>
+        <button class="edit-avatar-btn" (click)="onUnimplementedFeature()">
+          <i data-lucide="camera"></i>
+        </button>
+      </div>
+      <div class="profile-title-area">
+        <h1 class="text-neon profile-main-title">{{ profileData?.name || profileData?.username || 'Loading...' }}</h1>
+        <div class="role-tag">
+          <i data-lucide="shield-check" class="mini-icon"></i>
+          <span>{{ profileData?.roles?.[0]?.replace('ROLE_', '') }}</span>
+        </div>
+        <p class="text-grey profile-handle">&#64;{{ profileData?.username }}</p>
+      </div>
+    </div>
+
+    <div class="grid-2 gap-4">
+      <!-- Personal Information -->
+      <div class="card glass-card fade-in-up" style="animation-delay: 0.1s">
+        <div class="card-header d-flex justify-between align-center mb-3">
+          <h3 class="d-flex align-center gap-2 section-title">
+            <i data-lucide="user-circle" class="text-neon"></i>
+            Personal Information
+          </h3>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
+          <div class="form-grid">
+            <div class="form-group flex-1">
+              <label class="required-label"><i data-lucide="user-plus" class="form-icon"></i> Full Name</label>
+              <input type="text" formControlName="name" placeholder="Enter your full name">
+            </div>
+            <div class="form-group flex-1">
+              <label><i data-lucide="mail" class="form-icon"></i> Email Address</label>
+              <input type="text" [value]="profileData?.email" disabled class="disabled-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><i data-lucide="at-sign" class="form-icon"></i> Username</label>
+            <input type="text" [value]="profileData?.username" disabled class="disabled-input">
+          </div>
+
+          <div class="form-group">
+            <label class="required-label"><i data-lucide="smartphone" class="form-icon"></i> Phone Number</label>
+            <input type="text" formControlName="contact" placeholder="Enter your phone number">
+          </div>
+
+          <div class="form-group flex-1">
+            <label class="required-label"><i data-lucide="map-pin" class="form-icon"></i> Registered Area</label>
+            <input type="text" formControlName="area" placeholder="Enter your area">
+          </div>
+          <div class="form-group flex-1">
+            <label><i data-lucide="map-pinned" class="form-icon"></i> Registered District (Optional)</label>
+            <input type="text" formControlName="district" placeholder="Enter your district">
+          </div>
+
+          <button type="submit" class="btn-primary w-100 mt-2 submit-btn"
+            [disabled]="profileForm.invalid || isUpdatingProfile">
+            <span *ngIf="isUpdatingProfile" class="spinner-small mr-2"></span>
+            <span class="btn-text">Save Personal Details</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Security & Password -->
+      <div class="card glass-card fade-in-up" style="animation-delay: 0.2s">
+        <div class="card-header d-flex justify-between align-center mb-3">
+          <h3 class="d-flex align-center gap-2 section-title">
+            <i data-lucide="key-round" class="text-neon"></i>
+            Security Center
+          </h3>
+        </div>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+          <div class="form-group">
+            <label class="required-label"><i data-lucide="lock" class="form-icon"></i> Current Password</label>
+            <input type="password" formControlName="currentPassword" placeholder="••••••••">
+          </div>
+
+          <div class="form-group">
+            <label class="required-label"><i data-lucide="shield-plus" class="form-icon"></i> New Password</label>
+            <input type="password" formControlName="newPassword" placeholder="••••••••">
+            <div *ngIf="passwordForm.get('newPassword')?.touched && passwordForm.get('newPassword')?.errors"
+              class="text-danger mt-1 small">
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['required']">Password is required.</span>
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">Minimum 6 characters.</span>
+              <span *ngIf="passwordForm.get('newPassword')?.errors?.['pattern']">Needs Uppercase, Lowercase, Number &
+                Symbol.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="required-label"><i data-lucide="check-square" class="form-icon"></i> Confirm New
+              Password</label>
+            <input type="password" formControlName="confirmPassword" placeholder="••••••••">
+            <div
+              *ngIf="(passwordForm.errors?.['mismatch'] || passwordForm.get('confirmPassword')?.errors?.['required']) && passwordForm.get('confirmPassword')?.touched"
+              class="text-danger mt-1 small">
+              <span *ngIf="passwordForm.get('confirmPassword')?.errors?.['required']">Confirmation required.</span>
+              <span *ngIf="passwordForm.errors?.['mismatch']">Passwords do not match.</span>
+            </div>
+          </div>
+
+          <div class="security-info mb-3">
+            <i data-lucide="alert-circle" class="text-neon"></i>
+            <p>Ensure your new password uses mixed characters for better security.</p>
+          </div>
+
+          <button type="submit" class="btn-ghost w-100 submit-btn"
+            [disabled]="passwordForm.invalid || isChangingPassword">
+            <span *ngIf="isChangingPassword" class="spinner-small mr-2"></span>
+            <span class="btn-text">Update Security Settings</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

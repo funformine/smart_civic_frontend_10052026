@@ -1,0 +1,91 @@
+    <div class="auth-container">
+      <div class="card auth-card">
+        <h2 class="text-neon">Register</h2>
+        <p class="text-grey mb-1">Join us in making our city smarter.</p>
+        
+        <div *ngIf="errorMessage" class="alert alert-error">
+          {{ errorMessage }}
+        </div>
+        
+        <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+        
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required-label">Name</label>
+              <input type="text" formControlName="name" placeholder="Full Name">
+              <div *ngIf="f['name'].touched && f['name'].errors" class="error-text">
+                <span *ngIf="f['name'].errors['required']">Full name is required</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="required-label">Username</label>
+              <input type="text" formControlName="username" placeholder="Username">
+              <div *ngIf="f['username'].touched && f['username'].errors" class="error-text">
+                <span *ngIf="f['username'].errors['required']">Username is required</span>
+                <span *ngIf="f['username'].errors['pattern']">Must contain Uppercase, Lowercase, Number & Special Character</span>
+                <span *ngIf="f['username'].errors['minlength']">Minimum 3 characters</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="required-label">Email ID</label>
+            <input type="email" formControlName="email" placeholder="Email Address">
+            <div *ngIf="f['email'].touched && f['email'].errors" class="error-text">
+              <span *ngIf="f['email'].errors['required']">Email is required</span>
+              <span *ngIf="f['email'].errors['email']">Enter a valid email address</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required-label">Contact Number</label>
+              <input type="text" formControlName="contact" placeholder="10-digit number">
+              <div *ngIf="f['contact'].touched && f['contact'].errors" class="error-text">
+                <span *ngIf="f['contact'].errors['required']">Contact is required</span>
+                <span *ngIf="f['contact'].errors['pattern']">Enter a valid 10-digit number</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="required-label">Area</label>
+              <input type="text" formControlName="area" placeholder="Your Area/Neighborhood">
+              <div *ngIf="f['area'].touched && f['area'].errors" class="error-text">
+                <span *ngIf="f['area'].errors['required']">Area is required</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>District (Optional)</label>
+            <input type="text" formControlName="district" placeholder="Your District">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required-label">Password</label>
+              <input type="password" formControlName="password" placeholder="Password">
+              <div *ngIf="f['password'].touched && f['password'].errors" class="error-text">
+                <span *ngIf="f['password'].errors['required']">Password is required</span>
+                <span *ngIf="f['password'].errors['pattern']">Must contain Uppercase, Lowercase, Number & Special Character</span>
+                <span *ngIf="f['password'].errors['minlength']">Minimum 6 characters</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="required-label">Confirm Password</label>
+              <input type="password" formControlName="confirmPassword" placeholder="Confirm">
+              <div *ngIf="f['confirmPassword'].touched && registerForm.errors?.['mismatch']" class="error-text">
+                Passwords must match
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" [disabled]="registerForm.invalid || isLoading">
+            <div class="btn-content">
+              <span *ngIf="isLoading" class="spinner"></span>
+              <span>{{ isLoading ? 'Registering...' : 'Register' }}</span>
+            </div>
+          </button>
+        </form>
+        
+        <p class="mt-1">Already have an account? <a routerLink="/auth/login" class="text-neon">Login here</a></p>
+      </div>
+    </div>
+  `,

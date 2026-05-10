@@ -1,0 +1,74 @@
+<div class="page-content container fade-in-up">
+  <div class="contact-wrapper">
+    <div class="contact-info">
+      <span class="badge">Contact Us</span>
+      <h1 class="text-neon">Get in Touch</h1>
+      <p class="subtitle">Have a question or feedback? We'd love to hear from you. Our team is here to help.</p>
+    </div>
+
+    <div class="display-flexy">
+      <div class="info-cards">
+        <div class="info-card hover-lift">
+          <div class="info-icon"><i data-lucide="mail"></i></div>
+          <div class="info-text">
+            <label>Email Us</label>
+            <p>support&#64;smartcivic.gov</p>
+          </div>
+        </div>
+
+        <div class="info-card hover-lift">
+          <div class="info-icon"><i data-lucide="phone"></i></div>
+          <div class="info-text">
+            <label>Call Us</label>
+            <p>+1 (555) 123-4567</p>
+          </div>
+        </div>
+
+        <div class="info-card hover-lift">
+          <div class="info-icon"><i data-lucide="map-pin"></i></div>
+          <div class="info-text">
+            <label>Visit Us</label>
+            <p>123 Civic Plaza, Downtown</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="contact-form-container">
+        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <div class="input-wrapper">
+                <i data-lucide="user" class="field-icon"></i>
+                <input type="text" formControlName="name" placeholder="Your Name">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="input-wrapper">
+                <i data-lucide="mail" class="field-icon"></i>
+                <input type="email" formControlName="email" placeholder="Your Email">
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <div class="input-wrapper">
+                <i data-lucide="message-square" class="field-icon"></i>
+                <input type="text" formControlName="subject" placeholder="Subject">
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <div class="input-wrapper textarea-wrapper">
+                <i data-lucide="edit-3" class="field-icon"></i>
+                <textarea formControlName="message" rows="5" placeholder="Your Message"></textarea>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary w-100 mt-2 mt-5" [disabled]="contactForm.invalid || isSubmitting">
+            <span class="btn-content" *ngIf="!isSubmitting">Send Message <i data-lucide="send"></i></span>
+            <span class="spinner" *ngIf="isSubmitting"></span>
+          </button>
+          <div *ngIf="successMessage" class="alert alert-success mt-2">{{ successMessage }}</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

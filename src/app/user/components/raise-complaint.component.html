@@ -1,0 +1,121 @@
+    <div class="page-content container-compact fade-in-up">
+      <!-- Success/Failure Overlay -->
+      <div class="feedback-overlay" *ngIf="submitStatus" [class.show]="showFeedback">
+        <div class="feedback-content card glass-card">
+          <div class="feedback-icon" [class.success]="submitStatus === 'success'" [class.error]="submitStatus === 'error'">
+            <i [attr.data-lucide]="submitStatus === 'success' ? 'check-circle' : 'alert-circle'"></i>
+          </div>
+          <h2 class="text-neon mb-1">{{ submitStatus === 'success' ? 'Report Received!' : 'Submission Failed' }}</h2>
+          <p class="text-white mb-2 text-center">{{ feedbackMessage }}</p>
+          
+          <div class="redirect-timer" *ngIf="submitStatus === 'success'">
+            <div class="timer-bar"></div>
+            <p class="small text-grey mt-1">Redirecting to dashboard in {{ countdown }}s...</p>
+          </div>
+          
+          <button class="btn-primary w-100" *ngIf="submitStatus === 'error'" (click)="submitStatus = null">Try Again</button>
+        </div>
+      </div>
+
+      <header class="section-header-left mb-2">
+        <h1 class="text-neon">Raise a Complaint</h1>
+        <p class="text-grey">Structured report for quick resolution.</p>
+      </header>
+      
+      <div class="card premium-card">
+        <form [formGroup]="complaintForm" (ngSubmit)="onSubmit()">
+          
+          <!-- Category Selection -->
+          <div class="form-section mb-2">
+            <label class="section-label required-label">1. Category</label>
+            <div class="category-grid">
+              <div class="category-box" [class.active]="complaintForm.get('category')?.value === 'Power'" (click)="selectCategory('Power')">
+                <i data-lucide="zap" class="cat-icon"></i>
+                <span>Power</span>
+              </div>
+              <div class="category-box" [class.active]="complaintForm.get('category')?.value === 'Water'" (click)="selectCategory('Water')">
+                <i data-lucide="droplets" class="cat-icon"></i>
+                <span>Water</span>
+              </div>
+              <div class="category-box" [class.active]="complaintForm.get('category')?.value === 'Land'" (click)="selectCategory('Land')">
+                <i data-lucide="map" class="cat-icon"></i>
+                <span>Land</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side-by-Side: Issue Type & Area -->
+          <div class="form-grid-2 mb-2">
+            <!-- Custom Dropdown: Sub-category -->
+            <div class="form-group" *ngIf="complaintForm.get('category')?.value">
+              <label class="required-label"><i data-lucide="list-checks" class="label-icon"></i> Issue Type</label>
+              <div class="custom-select" [class.open]="openDropdown === 'sub'" (click)="toggleDropdown('sub', $event)">
+                <div class="select-trigger">
+                  <span>{{ complaintForm.get('subCategory')?.value || 'Select issue...' }}</span>
+                  <i data-lucide="chevron-down" class="arrow-icon"></i>
+                </div>
+                <div class="options-menu" *ngIf="openDropdown === 'sub'">
+                  <div class="option" *ngFor="let sub of subCategories" (click)="selectSub(sub, $event)">{{ sub }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Issue Input (Hidden by default, shown if 'Others' selected) -->
+            <div class="form-group slide-down" *ngIf="complaintForm.get('subCategory')?.value === 'Others'">
+              <label class="required-label"><i data-lucide="edit-3" class="label-icon"></i> Define Your Issue</label>
+              <input type="text" formControlName="customIssue" placeholder="Briefly name the specific issue...">
+            </div>
+
+            <div class="form-group">
+              <label><i data-lucide="navigation" class="label-icon"></i> Reporting From (Your Profile Area)</label>
+              <div class="locked-field">
+                <i data-lucide="map-pin" class="btn-mini-icon text-neon"></i>
+                <span class="location-text">
+                  {{ complaintForm.get('area')?.value || 'Profile area not set' }}
+                </span>
+                <span class="lock-tag" *ngIf="complaintForm.get('area')?.value">Verified Area</span>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Description -->
+          <div class="form-group mb-2">
+            <label class="required-label"><i data-lucide="file-text" class="label-icon"></i> Detailed Description</label>
+            <textarea formControlName="description" rows="3" placeholder="Explain the issue briefly..."></textarea>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="form-group mb-2">
+            <label class="required-label"><i data-lucide="image" class="label-icon"></i> Evidence (Mandatory Photo)</label>
+            <div class="upload-bar" [class.has-file]="complaintForm.get('imageName')?.value" (click)="fileInput.click()">
+              <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" accept="image/*">
+              <div class="upload-content" *ngIf="!complaintForm.get('imageName')?.value">
+                <i data-lucide="upload-cloud" class="upload-icon"></i>
+                <span class="placeholder-txt">Click to select or upload photo evidence</span>
+              </div>
+              <div class="upload-content" *ngIf="complaintForm.get('imageName')?.value">
+                <i data-lucide="check-circle-2" class="text-neon"></i>
+                <span class="success-text">{{ complaintForm.get('imageName')?.value }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions-row">
+            <button type="button" class="btn-ghost" routerLink="/user/dashboard">
+              <i data-lucide="arrow-left" class="btn-mini-icon"></i> Back
+            </button>
+            <button type="submit" class="btn-primary" *ngIf="complaintForm.valid" [disabled]="isSubmitting">
+              <span *ngIf="!isSubmitting" class="d-flex align-center gap-2">
+                <i data-lucide="send"></i> Submit Report
+              </span>
+              <span class="spinner-small" *ngIf="isSubmitting"></span>
+            </button>
+          </div>
+          <div class="form-help-text mt-1 text-center" *ngIf="!complaintForm.valid && complaintForm.touched">
+            <small class="text-danger">Please complete all fields and upload evidence to submit.</small>
+          </div>
+        </form>
+      </div>
+    </div>
+  `,

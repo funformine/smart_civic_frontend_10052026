@@ -1,0 +1,11 @@
+main {
+      min-height: 100vh;
+      background-color: var(--smart-bg-dark);
+      transition: var(--smart-transition);
+      padding-top: 70px; /* Space for fixed navbar */
+    }
+    .content-shifted {
+      margin-left: 250px;
+      padding: 2rem;
+    }
+  

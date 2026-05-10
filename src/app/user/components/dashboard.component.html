@@ -1,0 +1,137 @@
+    <div class="dashboard-container fade-in-up">
+      <header class="dashboard-header mb-3">
+        <div>
+          <h1 class="text-neon">Citizen Dashboard</h1>
+          <p class="text-grey">Track your community impact and report new issues.</p>
+        </div>
+        <button class="btn-primary" routerLink="/user/raise">
+          <span class="btn-content"><i data-lucide="plus-circle"></i> Raise Complaint</span>
+        </button>
+      </header>
+      
+      <div class="bento-stats mb-3">
+        <div class="bento-stat hover-lift main-stat">
+          <div class="stat-icon main"><i data-lucide="layout-list"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Total Reports</span>
+            <h2 class="stat-value">{{ summary?.totalReports || 0 }}</h2>
+          </div>
+        </div>
+
+        <div class="bento-stat hover-lift">
+          <div class="stat-icon success"><i data-lucide="check-circle-2"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Resolved</span>
+            <h2 class="stat-value text-neon">{{ summary?.resolvedReports || 0 }}</h2>
+          </div>
+        </div>
+
+        <div class="bento-stat hover-lift highlight-pending">
+          <div class="stat-icon warning"><i data-lucide="clock"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <h2 class="stat-value">{{ summary?.pendingReports || 0 }}</h2>
+          </div>
+        </div>
+
+        <div class="bento-stat hover-lift tip-card">
+          <div class="stat-icon info"><i data-lucide="lightbulb"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Quick Tip</span>
+            <p class="stat-text">Detailed descriptions help us resolve issues faster!</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="reports-section">
+        <h2 class="section-title mb-2">My Reports</h2>
+        
+        <div class="complaints-grid" *ngIf="complaints.length > 0">
+          <div class="complaint-item hover-lift" *ngFor="let c of complaints">
+            <!-- Image / Placeholder Section -->
+            <div class="report-visual">
+              <div class="image-box" *ngIf="c.imageName || c.photoUrl">
+                <img [src]="'/assets/uploads/' + (c.imageName || c.photoUrl)" [alt]="c.category" 
+                     onerror="this.src='https://via.placeholder.com/300x180/1a1a1a/00ff88?text=Evidence'">
+              </div>
+              <div class="placeholder-box" *ngIf="!c.imageName && !c.photoUrl">
+                <span class="star-icon">*</span>
+              </div>
+              <div class="status-overlay" [class.pending]="c.status === 'Pending'">
+                {{ c.status }}
+              </div>
+            </div>
+
+            <div class="report-details" [class.editing-mode]="editingComplaint?.id === c.id">
+              <div class="report-meta">
+                <span class="report-id">#{{ c.id }}</span>
+                <span class="report-date">{{ (c.raisedDate || c.createdAt) | date:'shortDate' }}</span>
+              </div>
+              <div class="report-category-row">
+                <span class="report-cat">{{ c.category }}</span>
+                <span class="report-status-badge" [class.pending]="c.status === 'Pending'">{{ c.status }}</span>
+              </div>
+
+              <!-- VIEW MODE -->
+              <ng-container *ngIf="editingComplaint?.id !== c.id">
+                <h3 class="report-desc">{{ c.description }}</h3>
+                <div class="report-loc">
+                  <i data-lucide="map-pin"></i>
+                  <span>{{ c.location }}</span>
+                </div>
+
+                <!-- Action Buttons: View Mode -->
+                <div class="report-actions-mini mt-2" *ngIf="c.status === 'Pending'">
+                  <button class="btn-action-mini edit" (click)="openEdit(c)">
+                    <i data-lucide="edit-2"></i> Edit
+                  </button>
+                  <button class="btn-action-mini delete" (click)="deleteReport(c.id!)">
+                    <i data-lucide="trash-2"></i> Delete
+                  </button>
+                </div>
+              </ng-container>
+
+              <!-- EDIT MODE (Inline) -->
+              <ng-container *ngIf="editingComplaint?.id === c.id">
+                <div class="inline-edit-form pt-2">
+                  <div class="form-group-inline mb-2">
+                    <label class="text-tiny text-grey uppercase tracking-wider mb-1 d-block">Description</label>
+                    <textarea class="inline-textarea" rows="2" [(ngModel)]="editDesc"></textarea>
+                  </div>
+                  <div class="form-group-inline mb-3">
+                    <label class="text-tiny text-grey uppercase tracking-wider mb-1 d-block">Location Reference</label>
+                    <div class="input-with-icon-inline">
+                      <i data-lucide="map-pin"></i>
+                      <input type="text" class="inline-input" [(ngModel)]="editLoc">
+                    </div>
+                  </div>
+
+                  <div class="inline-actions flex-end gap-2">
+                    <button class="btn-inline-cancel" (click)="editingComplaint = null" [disabled]="isSavingEdit">Cancel</button>
+                    <button class="btn-inline-save" (click)="saveEdit()" [disabled]="isSavingEdit">
+                      <span *ngIf="!isSavingEdit">Update Report</span>
+                      <span *ngIf="isSavingEdit" class="spinner-tiny"></span>
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        
+        <div *ngIf="isReportsLoading && complaints.length === 0" class="loading-state-container">
+          <div class="spinner-neon"></div>
+          <p class="text-grey mt-2">Syncing your reports...</p>
+        </div>
+
+        <div *ngIf="!isReportsLoading && complaints.length === 0" class="empty-state">
+          <div class="empty-icon-box">
+            <i data-lucide="clipboard-list" class="icon-float"></i>
+          </div>
+          <h3>No Reports Yet</h3>
+          <p class="text-grey">You haven't reported any civic issues. Your active participation helps build a better city.</p>
+          <button class="btn-ghost mt-2" routerLink="/user/raise">Report Your First Issue</button>
+        </div>
+      </div>
+    </div>

@@ -1,0 +1,6 @@
+    <app-navbar></app-navbar>
+    <app-sidebar *ngIf="authService.currentUserValue"></app-sidebar>
+    <main [class.content-shifted]="authService.currentUserValue">
+      <router-outlet></router-outlet>
+    </main>
+  `,

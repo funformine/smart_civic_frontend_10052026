@@ -1,0 +1,24 @@
+.auth-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .auth-card { width: 100%; max-width: 600px; }
+    form { margin-top: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; flex: 1; }
+    .form-row { display: flex; gap: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: var(--smart-text-grey); }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--smart-bg-dark);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+    }
+    .btn-primary { width: 100%; margin-top: 1rem; }
+    .mt-1 { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; }
+    .mb-1 { margin-bottom: 1rem; }
+  
