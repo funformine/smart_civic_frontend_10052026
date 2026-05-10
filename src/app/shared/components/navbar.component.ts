@@ -13,7 +13,7 @@ declare var lucide: any;
       <!-- Section 1: Logo -->
       <div class="nav-logo" routerLink="/home">
         <div class="logo-box">
-          <i data-lucide="shield" class="logo-icon-lucide"></i>
+          <img src="logo.png" alt="Smart Civic Logo" class="logo-img">
         </div>
         <span class="logo-text">Smart<span class="text-neon">Civic</span></span>
       </div>
@@ -92,11 +92,10 @@ declare var lucide: any;
       box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
     }
 
-    .logo-icon-lucide {
-      width: 1.2rem;
-      height: 1.2rem;
-      color: var(--smart-bg-dark);
-      stroke-width: 2.5px;
+    .logo-img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
     }
 
     .logo-text {
