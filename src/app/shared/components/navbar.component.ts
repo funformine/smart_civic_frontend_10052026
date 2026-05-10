@@ -82,19 +82,26 @@ declare var lucide: any;
     }
 
     .logo-box {
-      width: 38px;
-      height: 38px;
-      background: var(--smart-green-neon);
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+      transition: 0.3s ease;
+    }
+    
+    .nav-logo:hover .logo-box {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--smart-green-neon);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
     }
 
     .logo-img {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       object-fit: contain;
     }
 
